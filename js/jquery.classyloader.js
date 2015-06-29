@@ -18,6 +18,9 @@
             height: 200,
             animate: true,
             displayOnLoad: true,
+            displayPercentSymbol: false,
+            currentValue: 100,
+            maxValue: 100,
             percentage: 100,
             speed: 1,
             roundedLine: false,
@@ -32,6 +35,11 @@
             lineWidth: 5,
             start: 'left'
         };
+        if (typeof settings.percentage !== 'undefined') {
+            settings.maxValue = 100;
+            settings.currentValue = settings.percentage;
+            settings.displayPercentSymbol = true;
+        }
         settings = $.extend({
         }, defaultSettings, settings);
         var r = $(this);
@@ -43,7 +51,9 @@
             var hw = r.width() / 2;
             var hh = r.height() / 2;
             var u = 100;
-            var a = 0;
+            var absoluteValue = 0;
+            var percentValue = 0;
+            var percentValueStep = 100 / settings.maxValue;
             var startPos = 0;
             var f = function(e) {
                 var t = radius(360) / u;
@@ -52,9 +62,9 @@
             ctx.scale(1, 1);
             ctx.lineWidth = settings.lineWidth;
             ctx.strokeStyle = settings.lineColour;
-            var l = function(s, u) {
-                s = s || f(a);
-                u = u || f(a + 1);
+            var l = function(newValue, s, u) {
+                s = s || f(absoluteValue);
+                u = u || f(absoluteValue + 1);
                 ctx.clearRect(0, 0, r.width(), r.height());
                 if (settings.showRemaining === true) {
                     ctx.beginPath();
@@ -94,13 +104,15 @@
                     ctx.font = settings.fontSize + " " + settings.fontFamily;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText(a + 1 + "%", hw, hh);
+                    var text = settings.displayPercentSymbol ? newValue + "%" : newValue;
+                    ctx.fillText(text, hw, hh);
                 }
             };
             setTimeout(function c() {
-                l(f(a), f(a + 1));
-                a += 1;
-                if (a < settings.percentage) {
+                l(absoluteValue + 1, f(percentValue), f(percentValue + percentValueStep));
+                absoluteValue += 1;
+                percentValue += percentValueStep;
+                if (absoluteValue < settings.currentValue) {
                     setTimeout(c, settings.speed);
                 }
             }, settings.speed);
